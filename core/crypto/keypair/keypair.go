@@ -34,3 +34,23 @@ func CreateKeyPairFromPrivateKeyString(privateKeyString string) (*KeyPair, error
 	publicKey := ed25519.NewKeyFromSeed(privateKeySeed).Public()
 	return &KeyPair{privateKeySeed, []byte(publicKey.(ed25519.PublicKey))}, nil
 }
+
+func PublicKeyToString(publicKey []byte) (string, error) {
+	return hex.EncodeToString(publicKey), nil
+}
+
+func StringToPublicKey(publicKeyString string) ([]byte, error) {
+	hex_length := len(publicKeyString)
+	if hex_length != 2*ed25519.PublicKeySize {
+		return nil, InvalidKeySizeError
+	}
+	publicKey := make([]uint8, ed25519.PublicKeySize)
+	n, err := hex.Decode(publicKey, []byte(publicKeyString))
+	if err != nil {
+		return nil, err
+	}
+	if n != ed25519.PublicKeySize {
+		return nil, InvalidKeySizeError
+	}
+	return publicKey, nil
+}

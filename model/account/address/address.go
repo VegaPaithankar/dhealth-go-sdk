@@ -1,13 +1,13 @@
 package address
 
 import (
-	"encoding/hex"
 	"errors"
 	"log"
 
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
 
+	"dhealth-sdk/core/crypto/keypair"
 	"dhealth-sdk/core/format/base32"
 	"dhealth-sdk/model/network/networktype"
 )
@@ -30,15 +30,13 @@ func CreateFromPublicKey(publicKeyString string, networkType networktype.Network
 		log.Printf("pubkey string length %d is not 2x pubkey size (%d)", len(publicKeyString), PUBLIC_KEY_SIZE_BYTES)
 		return nil, InvalidKeySizeError
 	}
-	publicKey := make([]byte, length)
-	n, err := hex.Decode(publicKey, []byte(publicKeyString))
+	publicKey, err := keypair.StringToPublicKey(publicKeyString)
 	if err != nil {
-		log.Printf("hex decode error: %s", publicKeyString)
-		return nil, err
-	}
-	if n != length {
-		log.Printf("extracted pubkey size %d instead of %d", n, length)
-		return nil, InvalidKeySizeError
+		if err == keypair.InvalidKeySizeError {
+			return nil, InvalidKeySizeError
+		} else {
+			return nil, err
+		}
 	}
 	addr := publicKeyToAddress(publicKey, networkType)
 	addrString, err := addressToString(addr)
